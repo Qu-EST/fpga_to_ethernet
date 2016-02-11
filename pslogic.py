@@ -2,6 +2,7 @@ import struct
 import socket
 from Queue import Queue
 import threading
+import time
 
 HOST, PORT = "10.0.0.1", 9999
 CONTROL_ADDR = ""
@@ -40,13 +41,16 @@ class test_generator(threading.Thread):
 
     def run(self):
         while self.switch.is_set():
-            for i in range(1, 1048500):
+            start = time.time()
+            for i in range(1, 999999):
                 msg = struct.pack('>I', i)
                 msg = msg+msg
                 self.dataq.put(msg)
             while(self.dataq.empty()==False):
                 pass
-            
+            end = time.time()
+            time_taken = end-start
+            print time_taken
             self.sender.switch.clear()
             self.switch.clear()
             
