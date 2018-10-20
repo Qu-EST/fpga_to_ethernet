@@ -1,0 +1,6 @@
+#data files
+*.csv
+
+#emacs temp files
+*#*
+*~*

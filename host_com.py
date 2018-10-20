@@ -1,29 +1,35 @@
-import socketserver
-import datetime
+'''host computer program to receive data continously till the connection is broken
+if the connection is broken, new connection is accepted and data is stored to a new file'''
 
-class MyTCPHandler(socketserver.BaseRequestHandler):
-    """
-    The request handler class for our server.
+import socket
+from time import strftime
+import struct
 
-    It is instantiated once per connection to the server, and must
-    override the handle() method to implement communication to the
-    client.
-    """
-    def setup(self):
-        self.output = open(str(datetime.datetime.now()), 'a+')
-    def handle(self):
-        # self.request is the TCP socket connected to the client
-        self.data = self.request.recv(8)
-        print("{} wrote:".format(self.client_address[0]))
-        print(self.data)
-        # just send back the same data, but upper-cased
-        self.output.write("{}{}".format(self.data,'\n'))
+def get_data(conn):
+    data = None
+    outfile = open(strftime('%H:%M:%S_%m-%d'), 'a+')
+    while True:
+        data1 = conn.recv(4)
+        data2 = conn.recv(4)
+        if((data1==b'') or (data2 == b'')):
+            break
+        else:
+            ref_id = struct.unpack('>I', data1)[0]
+            u_time = struct.unpack('>I', data2)[0]
+            out = "{},{}\n".format(ref_id, u_time)
+            print(out)
+            outfile.write(out)
+    conn.close()
+    outfile.close()
+        
 
 if __name__ == "__main__":
     HOST, PORT = "10.0.0.1", 9999
-
-    # Create the server, binding to localhost on port 9999
-    with socketserver.TCPServer((HOST, PORT), MyTCPHandler) as server:
-        # Activate the server; this will keep running until you
-        # interrupt the program with Ctrl-C
-        server.serve_forever()
+    server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_sock.bind((HOST, PORT))
+    #listen for one connection 
+    server_sock.listen(1)
+    #accept a connection and receive till the connection dies
+    while True:
+        conn, client_addr = server_sock.accept()
+        get_data(conn)
