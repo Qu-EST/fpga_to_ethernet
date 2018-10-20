@@ -7,7 +7,7 @@ import struct
 
 def get_data(conn):
     data = None
-    outfile = open(strftime('%H:%M:%S_%m-%d'), 'a+')
+    outfile = open('{}.csv'.format(strftime('%H:%M:%S_%m-%d')), 'a+')
     while True:
         data1 = conn.recv(4)
         data2 = conn.recv(4)
