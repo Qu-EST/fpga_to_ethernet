@@ -20,16 +20,25 @@ class TCP_sender(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
+        data = b''
         while self.switch.is_set():
             try:
-                data = self.dataq.get(block=False, timeout=1)
+                data += self.dataq.get(block=False, timeout=1)
             except:
-                pass
+                self.send(data)
+                data = b''
             
             else:
-                self.sock.sendall(data)
+                if(len(data) == 1024):
+                    self.send(data)
+                    data = b''
         self.sock.close()
 
+    def send(self, data):
+        length = len(data)
+        length = struct.pack('>I', length)
+        data = length + data
+        self.sock.sendall(data)
 
 class test_generator(threading.Thread):
     def __init__(self, dataq, sender):
