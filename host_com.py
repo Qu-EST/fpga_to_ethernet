@@ -4,7 +4,7 @@ if the connection is broken, new connection is accepted and data is stored to a 
 import socket
 from time import strftime
 import struct
-from Queue import Queue
+from queue import Queue
 import threading
 
 
@@ -16,7 +16,7 @@ class data_getter(threading.Thread):
         self.dataq = dataq
         self.switch = True
         self.processor = processor
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, name='data_getter')
 
         
     def run(self):
@@ -26,9 +26,10 @@ class data_getter(threading.Thread):
         
         while self.switch:
             size, self.switch = self.readndata(4, conn)
-            size = struct.unpack('>I', size)
-            data, self.switch = self.readndata(size, conn)
-            self.dataq.put(data)
+            if(self.switch):
+                size, = struct.unpack('>I', size)
+                data, self.switch = self.readndata(size, conn)
+                self.dataq.put(data)
         self.soc.close()
         while(self.dataq.empty()==False):
             pass
@@ -42,7 +43,7 @@ class data_getter(threading.Thread):
         
         data = b''
         conn_status = True
-        while len(data)<n:
+        while len(data)<n and conn_status:
             temp = soc.recv(n-len(data))
             if(temp== b''):
                 conn_status = False
@@ -57,8 +58,8 @@ class data_processor(threading.Thread):
     input: dataq'''
     def __init__(self, dataq):
         self.dataq = dataq
-        threading.Thread.__init__(self)
-        self.outfile = open('{}.csv'.format(strftime('%H:%M:%S_%m-%d')), 'a+')
+        threading.Thread.__init__(self, name = 'data_processor')
+        self.outfile = open('{}.csv'.format(strftime('%H-%M-%S_%m-%d')), 'a+')
         self.switch = True
 
 
@@ -71,10 +72,10 @@ class data_processor(threading.Thread):
             else:
                 while len(data)>0 :
                     refid = data[:4]
-                    refid = struct.unpack('<I', refid)
+                    refid, = struct.unpack('>I', refid)
                     data = data[4:]
                     utime = data[:4]
-                    utime = struct.unpack('<I', utime)
+                    utime, = struct.unpack('>I', utime)
                     data = data[4:]
                     self.outfile.write('{},{}\n'.format(refid, utime))
         self.outfile.close()
@@ -82,7 +83,7 @@ class data_processor(threading.Thread):
                 
 
 if __name__ == "__main__":
-    HOST, PORT = "10.0.0.1", 9999
+    HOST, PORT = "155.246.202.64", 9999
     server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_sock.bind((HOST, PORT))
     #listen for one connection 
