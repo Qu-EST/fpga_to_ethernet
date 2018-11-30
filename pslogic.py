@@ -1,10 +1,11 @@
+'''pslogic'''
 import struct
 import socket
 from Queue import Queue
 import threading
 import time
 
-HOST, PORT = "10.0.0.1", 9999
+HOST, PORT = "155.246.202.64", 9999
 CONTROL_ADDR = ""
 DATA_ADDR = ""
 TDC_REG_ADDR = ""
@@ -17,7 +18,7 @@ class TCP_sender(threading.Thread):
         self.dataq = dataq
         self.switch = threading.Event()
         self.switch.set()
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, name='data_sender')
 
     def run(self):
         data = b''
@@ -25,8 +26,9 @@ class TCP_sender(threading.Thread):
             try:
                 data += self.dataq.get(block=False, timeout=1)
             except:
-                self.send(data)
-                data = b''
+                if len(data)>0:
+                    self.send(data)
+                    data = b''
             
             else:
                 if(len(data) == 1024):
@@ -46,12 +48,12 @@ class test_generator(threading.Thread):
         self.switch = threading.Event()
         self.switch.set()
         self.sender = sender
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, name= 'test_generator')
 
     def run(self):
         while self.switch.is_set():
             start = time.time()
-            for i in range(1, 999999):
+            for i in range(1, 99999):
                 msg = struct.pack('>I', i)
                 msg = msg+msg
                 self.dataq.put(msg)
