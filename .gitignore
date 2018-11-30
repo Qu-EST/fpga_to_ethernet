@@ -6,3 +6,8 @@ test_time.py
 #emacs temp files
 *#*
 *~*
+
+
+#eclipse project files
+.project
+.pydevproject

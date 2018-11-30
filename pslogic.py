@@ -73,7 +73,7 @@ if __name__ == "__main__":
     sender = TCP_sender(sock, data_queue)
     sender.start()
 
-    
+    #implement the threaded program to get the data from the PL
 
     #test data generator for the ethernet queeu
     if(TEST):
